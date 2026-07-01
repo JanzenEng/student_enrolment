@@ -6,58 +6,65 @@ import com.coursework.enrolment.structure.DoublyLinkedList;
 /**
  * Service layer between the UI and the Doubly Linked List.
  *
- * UI classes should call this service instead of directly changing the DLL.
- * This makes the code easier for group members to maintain.
+ * UI should call this class instead of directly changing the DLL.
+ * This keeps the code cleaner and easier for group members to work on.
  */
 public class StudentEnrolmentService {
-    private final DoublyLinkedList studentList;
-    private int nextStudentId;
+    private DoublyLinkedList studentList;
+    private int nextId;
 
     public StudentEnrolmentService() {
         this.studentList = new DoublyLinkedList();
-        this.nextStudentId = 1;
+        this.nextId = 1;
     }
 
-    public void addStudent(String name, String email, String course) {
-        Student student = new Student(nextStudentId, clean(name), clean(email), clean(course));
-        studentList.addStudent(student);
-        nextStudentId++;
+    /**
+     * TODO: Task 2
+     * Validate input, create Student object, then call studentList.addStudent(student).
+     */
+    public boolean addStudent(String name, String email, String course) {
+        Student student = new Student(nextId, name, email, course);
+        boolean isAdded = studentList.addStudent(student);
+
+        if (isAdded) {
+            nextId++;
+        }
+
+        return isAdded;
     }
 
-    public boolean deleteStudentById(int studentId) {
-        return studentList.deleteStudentById(studentId);
-    }
-
-    public boolean deleteStudentByName(String name) {
+    /**
+     * TODO: Task 2
+     */
+    public boolean deleteStudent(String name) {
         return studentList.deleteStudentByName(name);
     }
 
-    public Student findStudentById(int studentId) {
-        return studentList.findStudentById(studentId);
+    /**
+     * TODO: Task 3
+     */
+    public Student searchStudent(String keyword) {
+        return studentList.searchStudent(keyword);
     }
 
-    public Student[] searchStudents(String keyword) {
-        return studentList.searchStudents(keyword);
-    }
-
+    /**
+     * TODO: Task 3
+     */
     public Student[] getAllStudents() {
         return studentList.getAllStudents();
     }
 
+    /**
+     * TODO: Task 3
+     */
     public Student[] getReverseCopy() {
         return studentList.getReverseCopy();
     }
 
+    /**
+     * TODO: Task 4
+     */
     public String generateReport() {
         return studentList.generateReport();
-    }
-
-    public void seedSampleData() {
-        addStudent("Alice Smith", "alice@univ.edu", "Java Programming");
-        addStudent("Bob Jones", "bob@univ.edu", "Web Development");
-    }
-
-    private String clean(String value) {
-        return value == null ? "" : value.trim();
     }
 }

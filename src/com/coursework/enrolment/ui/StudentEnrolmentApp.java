@@ -4,18 +4,14 @@ import com.coursework.enrolment.model.Student;
 import com.coursework.enrolment.service.StudentEnrolmentService;
 
 import javax.swing.*;
-import javax.swing.border.EmptyBorder;
 import javax.swing.table.DefaultTableModel;
-import javax.swing.table.TableCellEditor;
-import javax.swing.table.TableCellRenderer;
 import java.awt.*;
-import java.util.EventObject;
 
 /**
- * Java Swing UI for the Student Enrolment Program.
+ * Main Swing UI for the Student Enrolment Program.
  *
- * The UI only displays data. The main storage is the custom DoublyLinkedList
- * accessed through StudentEnrolmentService.
+ * Task 1 prepares the UI layout and connects buttons to placeholder methods.
+ * Other group members can complete the logic in StudentEnrolmentService and DoublyLinkedList.
  */
 public class StudentEnrolmentApp extends JFrame {
     private final StudentEnrolmentService service;
@@ -24,23 +20,17 @@ public class StudentEnrolmentApp extends JFrame {
     private JTextField nameField;
     private JTextField emailField;
     private JTextField courseField;
-
-    private DefaultTableModel tableModel;
     private JTable studentTable;
-
-    private JPanel detailPanel;
-    private JLabel detailIdLabel;
-    private JLabel detailNameLabel;
-    private JLabel detailEmailLabel;
-    private JLabel detailCourseLabel;
+    private DefaultTableModel tableModel;
+    private JPanel detailsPanel;
+    private JLabel detailsContentLabel;
 
     public StudentEnrolmentApp() {
-        service = new StudentEnrolmentService();
-        service.seedSampleData();
+        this.service = new StudentEnrolmentService();
 
         setTitle("Student Enrolment Program");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        setSize(1200, 720);
+        setSize(1100, 650);
         setLocationRelativeTo(null);
 
         buildUI();
@@ -50,7 +40,7 @@ public class StudentEnrolmentApp extends JFrame {
     private void buildUI() {
         JPanel mainPanel = new JPanel();
         mainPanel.setLayout(new BoxLayout(mainPanel, BoxLayout.Y_AXIS));
-        mainPanel.setBorder(new EmptyBorder(15, 15, 15, 15));
+        mainPanel.setBorder(BorderFactory.createEmptyBorder(15, 15, 15, 15));
 
         JLabel titleLabel = new JLabel("Student Enrolment Program");
         titleLabel.setFont(new Font("Arial", Font.BOLD, 28));
@@ -59,47 +49,42 @@ public class StudentEnrolmentApp extends JFrame {
         mainPanel.add(Box.createVerticalStrut(20));
 
         mainPanel.add(createSearchPanel());
-        mainPanel.add(Box.createVerticalStrut(20));
+        mainPanel.add(Box.createVerticalStrut(15));
 
         mainPanel.add(createAddStudentPanel());
-        mainPanel.add(Box.createVerticalStrut(20));
+        mainPanel.add(Box.createVerticalStrut(15));
 
-        detailPanel = createDetailPanel();
-        detailPanel.setVisible(false);
-        mainPanel.add(detailPanel);
-        mainPanel.add(Box.createVerticalStrut(20));
+        detailsPanel = createDetailsPanel();
+        detailsPanel.setVisible(false);
+        mainPanel.add(detailsPanel);
+        mainPanel.add(Box.createVerticalStrut(15));
 
         mainPanel.add(createTablePanel());
 
         JScrollPane scrollPane = new JScrollPane(mainPanel);
-        scrollPane.setBorder(null);
-        add(scrollPane);
+        setContentPane(scrollPane);
     }
 
     private JPanel createSearchPanel() {
         JPanel panel = createSectionPanel("Search & Tools");
 
-        searchField = new JTextField(20);
-        searchField.setToolTipText("Search by name or course");
-
+        searchField = new JTextField(18);
         JButton searchButton = new JButton("Search");
-        searchButton.addActionListener(event -> handleSearch());
-
         JButton clearButton = new JButton("Clear Search / View All");
-        clearButton.addActionListener(event -> handleViewAll());
-
-        JButton reverseButton = new JButton("View Reverse Copy");
-        reverseButton.addActionListener(event -> handleReverseCopy());
-
         JButton reportButton = new JButton("Generate Report");
-        reportButton.addActionListener(event -> handleGenerateReport());
+        JButton reverseButton = new JButton("View Reverse Copy");
+
+        searchButton.addActionListener(e -> handleSearch());
+        clearButton.addActionListener(e -> handleViewAll());
+        reportButton.addActionListener(e -> handleGenerateReport());
+        reverseButton.addActionListener(e -> handleViewReverseCopy());
 
         JPanel row = new JPanel(new FlowLayout(FlowLayout.LEFT));
         row.add(searchField);
         row.add(searchButton);
         row.add(clearButton);
-        row.add(reverseButton);
         row.add(reportButton);
+        row.add(reverseButton);
 
         panel.add(row);
         return panel;
@@ -108,12 +93,12 @@ public class StudentEnrolmentApp extends JFrame {
     private JPanel createAddStudentPanel() {
         JPanel panel = createSectionPanel("Add New Student");
 
-        nameField = new JTextField(18);
+        nameField = new JTextField(16);
         emailField = new JTextField(18);
         courseField = new JTextField(18);
-
         JButton enrolButton = new JButton("Enrol Student");
-        enrolButton.addActionListener(event -> handleAddStudent());
+
+        enrolButton.addActionListener(e -> handleAddStudent());
 
         JPanel row = new JPanel(new FlowLayout(FlowLayout.LEFT));
         row.add(new JLabel("Name:"));
@@ -128,157 +113,159 @@ public class StudentEnrolmentApp extends JFrame {
         return panel;
     }
 
-    private JPanel createDetailPanel() {
+    private JPanel createDetailsPanel() {
         JPanel panel = createSectionPanel("Selected Student Details");
 
-        JPanel card = new JPanel();
-        card.setLayout(new BoxLayout(card, BoxLayout.Y_AXIS));
-        card.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createMatteBorder(0, 5, 0, 0, new Color(0, 102, 204)),
-                new EmptyBorder(15, 15, 15, 15)
-        ));
-        card.setBackground(new Color(248, 248, 248));
-
-        detailIdLabel = new JLabel();
-        detailNameLabel = new JLabel();
-        detailEmailLabel = new JLabel();
-        detailCourseLabel = new JLabel();
-
-        card.add(detailIdLabel);
-        card.add(Box.createVerticalStrut(10));
-        card.add(detailNameLabel);
-        card.add(Box.createVerticalStrut(10));
-        card.add(detailEmailLabel);
-        card.add(Box.createVerticalStrut(10));
-        card.add(detailCourseLabel);
-        card.add(Box.createVerticalStrut(12));
+        detailsContentLabel = new JLabel("No student selected.");
+        detailsContentLabel.setVerticalAlignment(SwingConstants.TOP);
 
         JButton closeButton = new JButton("Close Details");
-        closeButton.addActionListener(event -> detailPanel.setVisible(false));
-        card.add(closeButton);
+        closeButton.addActionListener(e -> detailsPanel.setVisible(false));
 
-        panel.add(card);
+        JPanel contentPanel = new JPanel(new BorderLayout());
+        contentPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+        contentPanel.add(detailsContentLabel, BorderLayout.CENTER);
+        contentPanel.add(closeButton, BorderLayout.SOUTH);
+
+        panel.add(contentPanel);
         return panel;
     }
 
     private JPanel createTablePanel() {
         JPanel panel = createSectionPanel("Enrolled Students");
 
-        String[] columns = {"ID", "Name", "Course", "Actions"};
-        tableModel = new DefaultTableModel(columns, 0) {
+        tableModel = new DefaultTableModel(new Object[]{"ID", "Name", "Email", "Course"}, 0) {
             @Override
             public boolean isCellEditable(int row, int column) {
-                return column == 3;
+                return false;
             }
         };
 
         studentTable = new JTable(tableModel);
-        studentTable.setRowHeight(35);
-        studentTable.getColumn("Actions").setCellRenderer(new ActionCellRenderer());
-        studentTable.getColumn("Actions").setCellEditor(new ActionCellEditor());
+        studentTable.setRowHeight(26);
 
-        JScrollPane tableScrollPane = new JScrollPane(studentTable);
-        tableScrollPane.setPreferredSize(new Dimension(1100, 250));
-        panel.add(tableScrollPane);
+        JButton viewButton = new JButton("View Selected");
+        JButton deleteButton = new JButton("Delete Selected");
 
+        viewButton.addActionListener(e -> handleViewSelectedStudent());
+        deleteButton.addActionListener(e -> handleDeleteSelectedStudent());
+
+        JPanel buttonRow = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        buttonRow.add(viewButton);
+        buttonRow.add(deleteButton);
+
+        panel.add(new JScrollPane(studentTable));
+        panel.add(buttonRow);
         return panel;
     }
 
     private JPanel createSectionPanel(String title) {
-        JPanel outerPanel = new JPanel();
-        outerPanel.setLayout(new BoxLayout(outerPanel, BoxLayout.Y_AXIS));
-        outerPanel.setAlignmentX(Component.LEFT_ALIGNMENT);
-        outerPanel.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createLineBorder(new Color(220, 220, 220)),
-                new EmptyBorder(18, 18, 18, 18)
+        JPanel wrapper = new JPanel();
+        wrapper.setLayout(new BoxLayout(wrapper, BoxLayout.Y_AXIS));
+        wrapper.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(Color.LIGHT_GRAY),
+                BorderFactory.createEmptyBorder(15, 15, 15, 15)
         ));
+        wrapper.setAlignmentX(Component.LEFT_ALIGNMENT);
 
         JLabel titleLabel = new JLabel(title);
         titleLabel.setFont(new Font("Arial", Font.BOLD, 18));
         titleLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
-        outerPanel.add(titleLabel);
-        outerPanel.add(Box.createVerticalStrut(15));
+        wrapper.add(titleLabel);
+        wrapper.add(Box.createVerticalStrut(10));
 
-        return outerPanel;
+        return wrapper;
     }
 
     private void handleAddStudent() {
-        try {
-            service.addStudent(nameField.getText(), emailField.getText(), courseField.getText());
+        // TODO: Task 2 member will complete the add function logic.
+        boolean isAdded = service.addStudent(
+                nameField.getText(),
+                emailField.getText(),
+                courseField.getText()
+        );
+
+        if (isAdded) {
             clearInputFields();
             refreshTable(service.getAllStudents());
-            showInfo("Student enrolled successfully.");
-        } catch (IllegalArgumentException ex) {
-            showError(ex.getMessage());
+        } else {
+            showTodoMessage("Add Student function");
         }
     }
 
     private void handleSearch() {
-        Student[] results = service.searchStudents(searchField.getText());
-        refreshTable(results);
+        // TODO: Task 3 member will complete the search function logic.
+        Student result = service.searchStudent(searchField.getText());
 
-        if (results.length == 0) {
-            showInfo("No matching student record found.");
+        if (result == null) {
+            showTodoMessage("Search function");
+            return;
         }
+
+        refreshTable(new Student[]{result});
     }
 
     private void handleViewAll() {
+        // TODO: Task 3 member will complete getAllStudents in the DLL.
         searchField.setText("");
-        detailPanel.setVisible(false);
         refreshTable(service.getAllStudents());
     }
 
-    private void handleReverseCopy() {
-        Student[] reversedStudents = service.getReverseCopy();
-        refreshTable(reversedStudents);
-        showInfo("Displaying reverse copy of the list. The original DLL order is not changed.");
+    private void handleViewReverseCopy() {
+        // TODO: Task 3 member will complete reverse copy logic.
+        Student[] reverseStudents = service.getReverseCopy();
+        refreshTable(reverseStudents);
+
+        if (reverseStudents.length == 0) {
+            showTodoMessage("View Reverse Copy function");
+        }
     }
 
     private void handleGenerateReport() {
-        JTextArea reportArea = new JTextArea(service.generateReport());
-        reportArea.setEditable(false);
-        reportArea.setFont(new Font("Monospaced", Font.PLAIN, 13));
-
-        JScrollPane scrollPane = new JScrollPane(reportArea);
-        scrollPane.setPreferredSize(new Dimension(420, 260));
-
-        JOptionPane.showMessageDialog(this, scrollPane, "Enrolment Report", JOptionPane.INFORMATION_MESSAGE);
+        // TODO: Task 4 member will complete report generation logic.
+        JOptionPane.showMessageDialog(this, service.generateReport(), "Report", JOptionPane.INFORMATION_MESSAGE);
     }
 
-    private void handleViewStudent(int studentId) {
-        Student student = service.findStudentById(studentId);
+    private void handleViewSelectedStudent() {
+        int selectedRow = studentTable.getSelectedRow();
 
-        if (student == null) {
-            showError("Student record not found.");
+        if (selectedRow < 0) {
+            JOptionPane.showMessageDialog(this, "Please select a student first.");
             return;
         }
 
-        detailIdLabel.setText("ID: " + student.getId());
-        detailNameLabel.setText("Name: " + student.getName());
-        detailEmailLabel.setText("Email: " + student.getEmail());
-        detailCourseLabel.setText("Course: " + student.getCourse());
-        detailPanel.setVisible(true);
+        String id = tableModel.getValueAt(selectedRow, 0).toString();
+        String name = tableModel.getValueAt(selectedRow, 1).toString();
+        String email = tableModel.getValueAt(selectedRow, 2).toString();
+        String course = tableModel.getValueAt(selectedRow, 3).toString();
+
+        detailsContentLabel.setText("<html>"
+                + "<b>ID:</b> " + id + "<br><br>"
+                + "<b>Name:</b> " + name + "<br><br>"
+                + "<b>Email:</b> " + email + "<br><br>"
+                + "<b>Course:</b> " + course
+                + "</html>");
+
+        detailsPanel.setVisible(true);
     }
 
-    private void handleDeleteStudent(int studentId) {
-        int confirm = JOptionPane.showConfirmDialog(
-                this,
-                "Are you sure you want to delete this student record?",
-                "Confirm Delete",
-                JOptionPane.YES_NO_OPTION
-        );
+    private void handleDeleteSelectedStudent() {
+        // TODO: Task 2 member will complete delete function logic.
+        int selectedRow = studentTable.getSelectedRow();
 
-        if (confirm != JOptionPane.YES_OPTION) {
+        if (selectedRow < 0) {
+            JOptionPane.showMessageDialog(this, "Please select a student first.");
             return;
         }
 
-        boolean deleted = service.deleteStudentById(studentId);
-        if (deleted) {
-            detailPanel.setVisible(false);
+        String name = tableModel.getValueAt(selectedRow, 1).toString();
+        boolean isDeleted = service.deleteStudent(name);
+
+        if (isDeleted) {
             refreshTable(service.getAllStudents());
-            showInfo("Student record deleted successfully.");
+            detailsPanel.setVisible(false);
         } else {
-            showError("Student record not found.");
+            showTodoMessage("Delete Student function");
         }
     }
 
@@ -289,8 +276,8 @@ public class StudentEnrolmentApp extends JFrame {
             tableModel.addRow(new Object[]{
                     student.getId(),
                     student.getName(),
-                    student.getCourse(),
-                    "Actions"
+                    student.getEmail(),
+                    student.getCourse()
             });
         }
     }
@@ -301,93 +288,13 @@ public class StudentEnrolmentApp extends JFrame {
         courseField.setText("");
     }
 
-    private int getStudentIdFromRow(int row) {
-        int modelRow = studentTable.convertRowIndexToModel(row);
-        Object value = tableModel.getValueAt(modelRow, 0);
-        return Integer.parseInt(value.toString());
-    }
-
-    private void showInfo(String message) {
-        JOptionPane.showMessageDialog(this, message, "Info", JOptionPane.INFORMATION_MESSAGE);
-    }
-
-    private void showError(String message) {
-        JOptionPane.showMessageDialog(this, message, "Error", JOptionPane.ERROR_MESSAGE);
-    }
-
-    /**
-     * Renderer for the Actions column. It displays View and Delete buttons.
-     */
-    private class ActionCellRenderer extends JPanel implements TableCellRenderer {
-        private final JButton viewButton = new JButton("View");
-        private final JButton deleteButton = new JButton("Delete");
-
-        public ActionCellRenderer() {
-            setLayout(new FlowLayout(FlowLayout.LEFT, 5, 2));
-            add(viewButton);
-            add(deleteButton);
-        }
-
-        @Override
-        public Component getTableCellRendererComponent(
-                JTable table,
-                Object value,
-                boolean isSelected,
-                boolean hasFocus,
-                int row,
-                int column
-        ) {
-            return this;
-        }
-    }
-
-    /**
-     * Editor for the Actions column. It handles button clicks for each table row.
-     */
-    private class ActionCellEditor extends AbstractCellEditor implements TableCellEditor {
-        private final JPanel panel = new JPanel(new FlowLayout(FlowLayout.LEFT, 5, 2));
-        private final JButton viewButton = new JButton("View");
-        private final JButton deleteButton = new JButton("Delete");
-        private int editingRow = -1;
-
-        public ActionCellEditor() {
-            viewButton.addActionListener(event -> {
-                int studentId = getStudentIdFromRow(editingRow);
-                fireEditingStopped();
-                handleViewStudent(studentId);
-            });
-
-            deleteButton.addActionListener(event -> {
-                int studentId = getStudentIdFromRow(editingRow);
-                fireEditingStopped();
-                handleDeleteStudent(studentId);
-            });
-
-            panel.add(viewButton);
-            panel.add(deleteButton);
-        }
-
-        @Override
-        public Component getTableCellEditorComponent(
-                JTable table,
-                Object value,
-                boolean isSelected,
-                int row,
-                int column
-        ) {
-            editingRow = row;
-            return panel;
-        }
-
-        @Override
-        public Object getCellEditorValue() {
-            return "Actions";
-        }
-
-        @Override
-        public boolean isCellEditable(EventObject event) {
-            return true;
-        }
+    private void showTodoMessage(String functionName) {
+        JOptionPane.showMessageDialog(
+                this,
+                functionName + " is prepared as a placeholder. The assigned member should implement it.",
+                "Function Not Implemented Yet",
+                JOptionPane.INFORMATION_MESSAGE
+        );
     }
 
     public static void main(String[] args) {
