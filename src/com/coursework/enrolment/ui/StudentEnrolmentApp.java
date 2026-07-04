@@ -9,9 +9,6 @@ import java.awt.*;
 
 /**
  * Main Swing UI for the Student Enrolment Program.
- *
- * Task 1 prepares the UI layout and connects buttons to placeholder methods.
- * Other group members can complete the logic in StudentEnrolmentService and DoublyLinkedList.
  */
 public class StudentEnrolmentApp extends JFrame {
     private final StudentEnrolmentService service;
@@ -178,23 +175,29 @@ public class StudentEnrolmentApp extends JFrame {
     }
 
     private void handleAddStudent() {
-        // TODO: Task 2 member will complete the add function logic.
-        boolean isAdded = service.addStudent(
-                nameField.getText(),
-                emailField.getText(),
-                courseField.getText()
-        );
+        String name = nameField.getText().trim();
+        String email = emailField.getText().trim();
+        String course = courseField.getText().trim();
+
+        if (name.isEmpty() || email.isEmpty() || course.isEmpty()) {
+            JOptionPane.showMessageDialog(this, "Please fill in all fields (Name, Email, Course).", "Input Error", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+
+        boolean isAdded = service.addStudent(name, email, course);
 
         if (isAdded) {
             clearInputFields();
+            JOptionPane.showMessageDialog(this, "Student added successfully!", "Success", JOptionPane.INFORMATION_MESSAGE);
             refreshTable(service.getAllStudents());
         } else {
-            showTodoMessage("Add Student function");
+            JOptionPane.showMessageDialog(this, "Failed to add student. Student name might already exist.", "Error", JOptionPane.ERROR_MESSAGE);
         }
     }
 
     private void handleSearch() {
-        // TODO: Task 3 member will complete the search function logic.
+      
+       // TODO: Task 3 member will complete the search function logic.
         Student result = service.searchStudent(searchField.getText());
 
         if (result == null) {
@@ -206,13 +209,13 @@ public class StudentEnrolmentApp extends JFrame {
     }
 
     private void handleViewAll() {
-        // TODO: Task 3 member will complete getAllStudents in the DLL.
+         // TODO: Task 3 member will complete getAllStudents in the DLL.
         searchField.setText("");
         refreshTable(service.getAllStudents());
     }
 
     private void handleViewReverseCopy() {
-        // TODO: Task 3 member will complete reverse copy logic.
+       // // TODO: Task 3 member will complete reverse copy logic.
         Student[] reverseStudents = service.getReverseCopy();
         refreshTable(reverseStudents);
 
@@ -250,22 +253,28 @@ public class StudentEnrolmentApp extends JFrame {
     }
 
     private void handleDeleteSelectedStudent() {
-        // TODO: Task 2 member will complete delete function logic.
         int selectedRow = studentTable.getSelectedRow();
 
         if (selectedRow < 0) {
-            JOptionPane.showMessageDialog(this, "Please select a student first.");
+            JOptionPane.showMessageDialog(this, "Please select a student from the table first.");
             return;
         }
 
         String name = tableModel.getValueAt(selectedRow, 1).toString();
+        
+        int confirm = JOptionPane.showConfirmDialog(this, "Are you sure you want to delete student: " + name + "?", "Confirm Deletion", JOptionPane.YES_NO_OPTION);
+        if (confirm != JOptionPane.YES_OPTION) {
+            return; 
+        }
+
         boolean isDeleted = service.deleteStudent(name);
 
         if (isDeleted) {
+            JOptionPane.showMessageDialog(this, "Student deleted successfully!", "Success", JOptionPane.INFORMATION_MESSAGE);
             refreshTable(service.getAllStudents());
-            detailsPanel.setVisible(false);
+            detailsPanel.setVisible(false); 
         } else {
-            showTodoMessage("Delete Student function");
+            JOptionPane.showMessageDialog(this, "Failed to delete student. Record might not exist.", "Error", JOptionPane.ERROR_MESSAGE);
         }
     }
 

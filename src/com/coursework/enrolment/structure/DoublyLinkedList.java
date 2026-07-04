@@ -32,21 +32,91 @@ public class DoublyLinkedList {
     }
 
     /**
-     * TODO: Task 2
-     * Add a new student record in sorted order by student name.
-     * Also handle empty input and duplicate records.
+     * Task 2 
      */
     public boolean addStudent(Student student) {
-        return false;
+        if (student == null || student.getName() == null || student.getName().trim().isEmpty()) {
+            return false;
+        }
+
+        Node current = head;
+        while (current != null) {
+            if (current.getData().getName().equalsIgnoreCase(student.getName().trim())) {
+                return false; 
+            }
+            current = current.getNext();
+        }
+
+        Node newNode = new Node(student);
+
+        if (head == null) {
+            head = newNode;
+            tail = newNode;
+            increaseSize();
+            return true;
+        }
+
+        current = head;
+        while (current != null && current.getData().getName().compareToIgnoreCase(student.getName()) < 0) {
+            current = current.getNext();
+        }
+
+        if (current == head) {
+            newNode.setNext(head);
+            head.setPrevious(newNode);
+            head = newNode;
+        } else if (current == null) {
+            tail.setNext(newNode);
+            newNode.setPrevious(tail);
+            tail = newNode;
+        } else {
+            Node prev = current.getPrevious();
+            prev.setNext(newNode);
+            newNode.setPrevious(prev);
+            
+            newNode.setNext(current);
+            current.setPrevious(newNode);
+        }
+
+        increaseSize(); 
+        return true;
     }
 
     /**
-     * TODO: Task 2
-     * Delete a student record by student name.
-     * Must handle deleting first node, middle node, last node, and record not found.
+     * Task 2  Delete a student record by student name.
      */
     public boolean deleteStudentByName(String name) {
-        return false;
+        if (head == null || name == null || name.trim().isEmpty()) {
+            return false;
+        }
+
+        Node current = head;
+        while (current != null) {
+            if (current.getData().getName().equalsIgnoreCase(name.trim())) {
+                
+                if (current == head && current == tail) {
+                    head = null;
+                    tail = null;
+                } else if (current == head) {
+                    head = head.getNext();
+                    head.setPrevious(null);
+                } else if (current == tail) {
+                    tail = tail.getPrevious();
+                    tail.setNext(null);
+                } else {
+                    Node prev = current.getPrevious();
+                    Node nxt = current.getNext();
+                    prev.setNext(nxt);
+                    nxt.setPrevious(prev);
+                }
+                
+                decreaseSize(); 
+                return true;
+            }
+            current = current.getNext();
+        }
+        
+        return false; 
     }
 
     /**
@@ -57,13 +127,17 @@ public class DoublyLinkedList {
         return null;
     }
 
-    /**
-     * TODO: Task 3
-     * Return all student records from head to tail.
-     * The UI will use this to refresh the table.
-     */
-    public Student[] getAllStudents() {
-        return new Student[0];
+  public Student[] getAllStudents() {
+        //
+        Student[] students = new Student[size];
+        Node current = head;
+        int index = 0;
+        while (current != null) {
+            students[index] = current.getData();
+            index++;
+            current = current.getNext();
+        }
+        return students;
     }
 
     /**
@@ -77,22 +151,15 @@ public class DoublyLinkedList {
     /**
      * TODO: Task 4
      * Generate simple report information.
-     * Example: total records and number of students by course.
      */
     public String generateReport() {
         return "Report function is not implemented yet.";
     }
 
-    /**
-     * Helper method for future members to update size safely.
-     */
     protected void increaseSize() {
         size++;
     }
 
-    /**
-     * Helper method for future members to update size safely.
-     */
     protected void decreaseSize() {
         if (size > 0) {
             size--;
