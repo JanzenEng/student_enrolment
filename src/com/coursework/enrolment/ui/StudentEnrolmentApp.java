@@ -2,10 +2,9 @@ package com.coursework.enrolment.ui;
 
 import com.coursework.enrolment.model.Student;
 import com.coursework.enrolment.service.StudentEnrolmentService;
-
+import java.awt.*;
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
-import java.awt.*;
 
 /**
  * Main Swing UI for the Student Enrolment Program.
@@ -16,7 +15,7 @@ public class StudentEnrolmentApp extends JFrame {
     private JTextField searchField;
     private JTextField nameField;
     private JTextField emailField;
-    private JTextField courseField;
+    private JComboBox<String> courseComboBox;
     private JTable studentTable;
     private DefaultTableModel tableModel;
     private JPanel detailsPanel;
@@ -92,7 +91,14 @@ public class StudentEnrolmentApp extends JFrame {
 
         nameField = new JTextField(16);
         emailField = new JTextField(18);
-        courseField = new JTextField(18);
+        courseComboBox = new JComboBox<>(new String[]{
+            "Computer Science",
+            "Software Engineering",
+            "Cybersecurity",
+            "Data Science",
+            "Business Information Technology"
+    });
+    courseComboBox.setPreferredSize(new Dimension(220, 28));
         JButton enrolButton = new JButton("Enrol Student");
 
         enrolButton.addActionListener(e -> handleAddStudent());
@@ -103,7 +109,7 @@ public class StudentEnrolmentApp extends JFrame {
         row.add(new JLabel("Email:"));
         row.add(emailField);
         row.add(new JLabel("Course:"));
-        row.add(courseField);
+        row.add(courseComboBox);
         row.add(enrolButton);
 
         panel.add(row);
@@ -177,7 +183,7 @@ public class StudentEnrolmentApp extends JFrame {
     private void handleAddStudent() {
         String name = nameField.getText().trim();
         String email = emailField.getText().trim();
-        String course = courseField.getText().trim();
+        String course = (String) courseComboBox.getSelectedItem();
 
         if (name.isEmpty() || email.isEmpty() || course.isEmpty()) {
             JOptionPane.showMessageDialog(this, "Please fill in all fields (Name, Email, Course).", "Input Error", JOptionPane.WARNING_MESSAGE);
@@ -225,8 +231,35 @@ public class StudentEnrolmentApp extends JFrame {
     }
 
     private void handleGenerateReport() {
-        // TODO: Task 4 member will complete report generation logic.
-        JOptionPane.showMessageDialog(this, service.generateReport(), "Report", JOptionPane.INFORMATION_MESSAGE);
+        String report = service.generateReport();
+    
+        JOptionPane.showMessageDialog(this, report, "Report", JOptionPane.INFORMATION_MESSAGE);
+    
+        int choice = JOptionPane.showConfirmDialog(
+                this,
+                "Do you want to save this report as a text file?",
+                "Save Report",
+                JOptionPane.YES_NO_OPTION
+        );
+    
+        if (choice == JOptionPane.YES_OPTION) {
+            JFileChooser fileChooser = new JFileChooser();
+            fileChooser.setDialogTitle("Save Report");
+            fileChooser.setSelectedFile(new java.io.File("enrolment_report.txt"));
+    
+            int userSelection = fileChooser.showSaveDialog(this);
+    
+            if (userSelection == JFileChooser.APPROVE_OPTION) {
+                java.io.File fileToSave = fileChooser.getSelectedFile();
+    
+                try (java.io.FileWriter writer = new java.io.FileWriter(fileToSave)) {
+                    writer.write(report);
+                    JOptionPane.showMessageDialog(this, "Report saved successfully!");
+                } catch (java.io.IOException ex) {
+                    JOptionPane.showMessageDialog(this, "Failed to save report.", "Error", JOptionPane.ERROR_MESSAGE);
+                }
+            }
+        }
     }
 
     private void handleViewSelectedStudent() {
@@ -294,7 +327,7 @@ public class StudentEnrolmentApp extends JFrame {
     private void clearInputFields() {
         nameField.setText("");
         emailField.setText("");
-        courseField.setText("");
+        courseComboBox.setSelectedIndex(0);
     }
 
     private void showTodoMessage(String functionName) {

@@ -153,7 +153,53 @@ public class DoublyLinkedList {
      * Generate simple report information.
      */
     public String generateReport() {
-        return "Report function is not implemented yet.";
+        if (head == null) {
+            return "===== Enrolment Report =====\n"
+                    + "No student enrolment records available.";
+        }
+    
+        int totalRecords = 0;
+    
+        int computerScienceCount = 0;
+        int softwareEngineeringCount = 0;
+        int cyberSecurityCount = 0;
+        int dataScienceCount = 0;
+        int businessITCount = 0;
+        int othersCount = 0;
+    
+        Node current = head;
+    
+        while (current != null) {
+            totalRecords++;
+    
+            String course = current.getData().getCourse();
+    
+            if (course.equalsIgnoreCase("Computer Science")) {
+                computerScienceCount++;
+            } else if (course.equalsIgnoreCase("Software Engineering")) {
+                softwareEngineeringCount++;
+            } else if (course.equalsIgnoreCase("Cybersecurity")) {
+                cyberSecurityCount++;
+            } else if (course.equalsIgnoreCase("Data Science")) {
+                dataScienceCount++;
+            } else if (course.equalsIgnoreCase("Business Information Technology")) {
+                businessITCount++;
+            } else {
+                othersCount++;
+            }
+    
+            current = current.getNext();
+        }
+    
+        return "===== Enrolment Report =====\n\n"
+                + "Total number of enrolment records: " + totalRecords + "\n\n"
+                + "Students by Course:\n"
+                + "Computer Science: " + computerScienceCount + "\n"
+                + "Software Engineering: " + softwareEngineeringCount + "\n"
+                + "Cybersecurity: " + cyberSecurityCount + "\n"
+                + "Data Science: " + dataScienceCount + "\n"
+                + "Business Information Technology: " + businessITCount + "\n"
+                + "Others: " + othersCount;
     }
 
     protected void increaseSize() {
