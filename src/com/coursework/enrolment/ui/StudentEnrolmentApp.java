@@ -186,7 +186,7 @@ public class StudentEnrolmentApp extends JFrame {
         String course = (String) courseComboBox.getSelectedItem();
 
         if (name.isEmpty() || email.isEmpty() || course.isEmpty()) {
-            JOptionPane.showMessageDialog(this, "Please fill in all fields (Name, Email, Course).", "Input Error", JOptionPane.WARNING_MESSAGE);
+            JOptionPane.showMessageDialog(this, "Failed to add student. Email might already exist.", "Error", JOptionPane.ERROR_MESSAGE);
             return;
         }
 
@@ -202,31 +202,39 @@ public class StudentEnrolmentApp extends JFrame {
     }
 
     private void handleSearch() {
-      
-       // TODO: Task 3 member will complete the search function logic.
-        Student result = service.searchStudent(searchField.getText());
-
-        if (result == null) {
-            showTodoMessage("Search function");
+        String keyword = searchField.getText().trim();
+    
+        if (keyword.isEmpty()) {
+            JOptionPane.showMessageDialog(this, "Please enter a name, email, or course to search.");
             return;
         }
-
-        refreshTable(new Student[]{result});
+    
+        Student[] results = service.searchStudents(keyword);
+    
+        if (results.length == 0) {
+            JOptionPane.showMessageDialog(this, "No matching student found.");
+            return;
+        }
+    
+        refreshTable(results);
     }
 
     private void handleViewAll() {
-         // TODO: Task 3 member will complete getAllStudents in the DLL.
         searchField.setText("");
-        refreshTable(service.getAllStudents());
+        Student[] students = service.getAllStudents();
+        refreshTable(students);
+
+        if (students.length == 0) {
+            JOptionPane.showMessageDialog(this, "No student enrolment records available.");
+        }
     }
 
     private void handleViewReverseCopy() {
-       // // TODO: Task 3 member will complete reverse copy logic.
         Student[] reverseStudents = service.getReverseCopy();
         refreshTable(reverseStudents);
 
         if (reverseStudents.length == 0) {
-            showTodoMessage("View Reverse Copy function");
+            JOptionPane.showMessageDialog(this, "No student enrolment records available.");
         }
     }
 
@@ -328,15 +336,6 @@ public class StudentEnrolmentApp extends JFrame {
         nameField.setText("");
         emailField.setText("");
         courseComboBox.setSelectedIndex(0);
-    }
-
-    private void showTodoMessage(String functionName) {
-        JOptionPane.showMessageDialog(
-                this,
-                functionName + " is prepared as a placeholder. The assigned member should implement it.",
-                "Function Not Implemented Yet",
-                JOptionPane.INFORMATION_MESSAGE
-        );
     }
 
     public static void main(String[] args) {

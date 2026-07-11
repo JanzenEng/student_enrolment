@@ -35,50 +35,64 @@ public class DoublyLinkedList {
      * Task 2 
      */
     public boolean addStudent(Student student) {
-        if (student == null || student.getName() == null || student.getName().trim().isEmpty()) {
+        if (student == null) {
             return false;
         }
-
+    
+        if (student.getName().trim().isEmpty()
+                || student.getEmail().trim().isEmpty()
+                || student.getCourse().trim().isEmpty()) {
+            return false;
+        }
+    
         Node current = head;
+    
+        // Check duplicate email
         while (current != null) {
-            if (current.getData().getName().equalsIgnoreCase(student.getName().trim())) {
-                return false; 
+            if (current.getData().getEmail().equalsIgnoreCase(student.getEmail())) {
+                return false;
             }
+    
             current = current.getNext();
         }
-
+    
         Node newNode = new Node(student);
-
+    
         if (head == null) {
             head = newNode;
             tail = newNode;
-            increaseSize();
+            size++;
             return true;
         }
-
-        current = head;
-        while (current != null && current.getData().getName().compareToIgnoreCase(student.getName()) < 0) {
-            current = current.getNext();
-        }
-
-        if (current == head) {
+    
+        // Insert sorted by student name
+        if (student.getName().compareToIgnoreCase(head.getData().getName()) < 0) {
             newNode.setNext(head);
             head.setPrevious(newNode);
             head = newNode;
-        } else if (current == null) {
-            tail.setNext(newNode);
-            newNode.setPrevious(tail);
-            tail = newNode;
-        } else {
-            Node prev = current.getPrevious();
-            prev.setNext(newNode);
-            newNode.setPrevious(prev);
-            
-            newNode.setNext(current);
-            current.setPrevious(newNode);
+            size++;
+            return true;
         }
-
-        increaseSize(); 
+    
+        current = head;
+    
+        while (current.getNext() != null
+                && student.getName().compareToIgnoreCase(current.getNext().getData().getName()) > 0) {
+            current = current.getNext();
+        }
+    
+        newNode.setNext(current.getNext());
+        newNode.setPrevious(current);
+    
+        if (current.getNext() != null) {
+            current.getNext().setPrevious(newNode);
+        } else {
+            tail = newNode;
+        }
+    
+        current.setNext(newNode);
+        size++;
+    
         return true;
     }
 
@@ -120,32 +134,94 @@ public class DoublyLinkedList {
     }
 
     /**
-     * TODO: Task 3
-     * Search a student record by name or course.
+     * Task 3  Search a student record by name or course.
      */
-    public Student searchStudent(String keyword) {
-        return null;
+    public Student[] searchStudents(String keyword) {
+        if (keyword == null || keyword.trim().isEmpty()) {
+            return new Student[0];
+        }
+    
+        keyword = keyword.trim().toLowerCase();
+    
+        int matchCount = 0;
+        Node current = head;
+    
+        // First traversal: count matching records
+        while (current != null) {
+            Student student = current.getData();
+    
+            if (student.getName().toLowerCase().contains(keyword)
+                    || student.getEmail().toLowerCase().contains(keyword)
+                    || student.getCourse().toLowerCase().contains(keyword)) {
+                matchCount++;
+            }
+    
+            current = current.getNext();
+        }
+    
+        Student[] results = new Student[matchCount];
+        current = head;
+        int index = 0;
+    
+        // Second traversal: store matching records
+        while (current != null) {
+            Student student = current.getData();
+    
+            if (student.getName().toLowerCase().contains(keyword)
+                    || student.getEmail().toLowerCase().contains(keyword)
+                    || student.getCourse().toLowerCase().contains(keyword)) {
+                results[index] = student;
+                index++;
+            }
+    
+            current = current.getNext();
+        }
+    
+        return results;
     }
 
-  public Student[] getAllStudents() {
-        //
+    /**
+     * Task 3  Return all student records in the current list order.
+     */
+    public Student[] getAllStudents() {
         Student[] students = new Student[size];
+
+        if (head == null) {
+            return students;
+        }
+
         Node current = head;
         int index = 0;
-        while (current != null) {
+
+        do {
             students[index] = current.getData();
             index++;
             current = current.getNext();
-        }
+        } while (current != null && current != head);
+
         return students;
     }
 
     /**
-     * TODO: Task 3
-     * Create and return a reverse copy of the student list.
+     * Task 3  Create and return a reverse copy of the student list.
      */
     public Student[] getReverseCopy() {
-        return new Student[0];
+        Student[] students = new Student[size];
+
+        if (tail == null) {
+            return students;
+        }
+
+        Node current = tail;
+        int index = 0;
+
+        do {
+            students[index] = current.getData();
+            index++;
+            current = current.getPrevious();
+        } while (current != null && current != tail);
+
+        return students;
     }
 
     /**

@@ -41,21 +41,21 @@ public class StudentEnrolmentService {
     }
 
     /**
-     * TODO: Task 3
+     * Task 3
      */
-    public Student searchStudent(String keyword) {
-        return studentList.searchStudent(keyword);
+    public Student[] searchStudents(String keyword) {
+        return studentList.searchStudents(keyword);
     }
 
     /**
-     * TODO: Task 3
+     * Task 3
      */
     public Student[] getAllStudents() {
         return studentList.getAllStudents();
     }
 
     /**
-     * TODO: Task 3
+     * Task 3
      */
     public Student[] getReverseCopy() {
         return studentList.getReverseCopy();
