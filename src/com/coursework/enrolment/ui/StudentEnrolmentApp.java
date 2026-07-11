@@ -3,6 +3,10 @@ package com.coursework.enrolment.ui;
 import com.coursework.enrolment.model.Student;
 import com.coursework.enrolment.service.StudentEnrolmentService;
 import java.awt.*;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
+import java.time.format.ResolverStyle;
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 
@@ -14,7 +18,10 @@ public class StudentEnrolmentApp extends JFrame {
 
     private JTextField searchField;
     private JTextField nameField;
+    private JTextField icNumberField;
     private JTextField emailField;
+    private JTextField phoneNumberField;
+    private JTextField dateOfBirthField;
     private JComboBox<String> courseComboBox;
     private JTable studentTable;
     private DefaultTableModel tableModel;
@@ -26,7 +33,7 @@ public class StudentEnrolmentApp extends JFrame {
 
         setTitle("Student Enrolment Program");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        setSize(1100, 650);
+        setSize(1300, 750);
         setLocationRelativeTo(null);
 
         buildUI();
@@ -64,7 +71,7 @@ public class StudentEnrolmentApp extends JFrame {
     private JPanel createSearchPanel() {
         JPanel panel = createSectionPanel("Search & Tools");
 
-        searchField = new JTextField(18);
+        searchField = new JTextField(22);
         JButton searchButton = new JButton("Search");
         JButton clearButton = new JButton("Clear Search / View All");
         JButton reportButton = new JButton("Generate Report");
@@ -89,30 +96,43 @@ public class StudentEnrolmentApp extends JFrame {
     private JPanel createAddStudentPanel() {
         JPanel panel = createSectionPanel("Add New Student");
 
-        nameField = new JTextField(16);
+        nameField = new JTextField(14);
+        icNumberField = new JTextField(14);
         emailField = new JTextField(18);
+        phoneNumberField = new JTextField(12);
+        dateOfBirthField = new JTextField(10);
+        dateOfBirthField.setToolTipText("DOB format: YYYY/MM/DD, for example 2002/05/18");
         courseComboBox = new JComboBox<>(new String[]{
             "Computer Science",
             "Software Engineering",
             "Cybersecurity",
             "Data Science",
             "Business Information Technology"
-    });
-    courseComboBox.setPreferredSize(new Dimension(220, 28));
-        JButton enrolButton = new JButton("Enrol Student");
+        });
+        courseComboBox.setPreferredSize(new Dimension(220, 28));
 
+        JButton enrolButton = new JButton("Enrol Student");
         enrolButton.addActionListener(e -> handleAddStudent());
 
-        JPanel row = new JPanel(new FlowLayout(FlowLayout.LEFT));
-        row.add(new JLabel("Name:"));
-        row.add(nameField);
-        row.add(new JLabel("Email:"));
-        row.add(emailField);
-        row.add(new JLabel("Course:"));
-        row.add(courseComboBox);
-        row.add(enrolButton);
+        JPanel row1 = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        row1.add(new JLabel("Name:"));
+        row1.add(nameField);
+        row1.add(new JLabel("IC Number:"));
+        row1.add(icNumberField);
+        row1.add(new JLabel("Email:"));
+        row1.add(emailField);
 
-        panel.add(row);
+        JPanel row2 = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        row2.add(new JLabel("Phone:"));
+        row2.add(phoneNumberField);
+        row2.add(new JLabel("DOB:"));
+        row2.add(dateOfBirthField);
+        row2.add(new JLabel("Course:"));
+        row2.add(courseComboBox);
+        row2.add(enrolButton);
+
+        panel.add(row1);
+        panel.add(row2);
         return panel;
     }
 
@@ -137,7 +157,7 @@ public class StudentEnrolmentApp extends JFrame {
     private JPanel createTablePanel() {
         JPanel panel = createSectionPanel("Enrolled Students");
 
-        tableModel = new DefaultTableModel(new Object[]{"ID", "Name", "Email", "Course"}, 0) {
+        tableModel = new DefaultTableModel(new Object[]{"ID", "Name", "IC Number", "Email", "Phone", "DOB", "Course"}, 0) {
             @Override
             public boolean isCellEditable(int row, int column) {
                 return false;
@@ -182,40 +202,108 @@ public class StudentEnrolmentApp extends JFrame {
 
     private void handleAddStudent() {
         String name = nameField.getText().trim();
+        String icNumber = icNumberField.getText().trim();
         String email = emailField.getText().trim();
+        String phoneNumber = phoneNumberField.getText().trim();
+        String dateOfBirth = dateOfBirthField.getText().trim();
         String course = (String) courseComboBox.getSelectedItem();
 
-        if (name.isEmpty() || email.isEmpty() || course.isEmpty()) {
-            JOptionPane.showMessageDialog(this, "Failed to add student. Email might already exist.", "Error", JOptionPane.ERROR_MESSAGE);
+        if (!validateStudentInput(name, icNumber, email, phoneNumber, dateOfBirth, course)) {
             return;
         }
 
-        boolean isAdded = service.addStudent(name, email, course);
+        boolean isAdded = service.addStudent(name, icNumber, email, phoneNumber, dateOfBirth, course);
 
         if (isAdded) {
             clearInputFields();
             JOptionPane.showMessageDialog(this, "Student added successfully!", "Success", JOptionPane.INFORMATION_MESSAGE);
             refreshTable(service.getAllStudents());
         } else {
-            JOptionPane.showMessageDialog(this, "Failed to add student. Student name might already exist.", "Error", JOptionPane.ERROR_MESSAGE);
+            JOptionPane.showMessageDialog(this, "Failed to add student. IC number, email, or phone number might already exist.", "Error", JOptionPane.ERROR_MESSAGE);
+        }
+    }
+
+    private boolean validateStudentInput(String name, String icNumber, String email,
+                                         String phoneNumber, String dateOfBirth, String course) {
+        if (name.isEmpty() || icNumber.isEmpty() || email.isEmpty()
+                || phoneNumber.isEmpty() || dateOfBirth.isEmpty()
+                || course == null || course.isEmpty()) {
+            JOptionPane.showMessageDialog(this,
+                    "Please fill in all fields (Name, IC Number, Email, Phone, DOB, Course).",
+                    "Input Error",
+                    JOptionPane.WARNING_MESSAGE);
+            return false;
+        }
+
+        if (!icNumber.matches("\\d{12}")) {
+            JOptionPane.showMessageDialog(this,
+                    "IC Number must be exactly 12 digits. Example: 990101141234",
+                    "Invalid IC Number",
+                    JOptionPane.WARNING_MESSAGE);
+            icNumberField.requestFocus();
+            return false;
+        }
+
+        if (!phoneNumber.matches("\\d{10}")) {
+            JOptionPane.showMessageDialog(this,
+                    "Phone number must be exactly 10 digits. Example: 0111111111",
+                    "Invalid Phone Number",
+                    JOptionPane.WARNING_MESSAGE);
+            phoneNumberField.requestFocus();
+            return false;
+        }
+
+        if (!email.matches("^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$")) {
+            JOptionPane.showMessageDialog(this,
+                    "Please enter a valid email address. Example: student@gmail.com",
+                    "Invalid Email",
+                    JOptionPane.WARNING_MESSAGE);
+            emailField.requestFocus();
+            return false;
+        }
+
+        if (!isValidDateOfBirth(dateOfBirth)) {
+            JOptionPane.showMessageDialog(this,
+                    "DOB must be a valid date in YYYY/MM/DD format. Example: 2002/05/18",
+                    "Invalid DOB",
+                    JOptionPane.WARNING_MESSAGE);
+            dateOfBirthField.requestFocus();
+            return false;
+        }
+
+        return true;
+    }
+
+    private boolean isValidDateOfBirth(String dateOfBirth) {
+        try {
+            DateTimeFormatter formatter = DateTimeFormatter
+                    .ofPattern("uuuu/MM/dd")
+                    .withResolverStyle(ResolverStyle.STRICT);
+
+            LocalDate dob = LocalDate.parse(dateOfBirth, formatter);
+
+            // DOB cannot be today or in the future.
+            return dob.isBefore(LocalDate.now());
+        } catch (DateTimeParseException ex) {
+            return false;
         }
     }
 
     private void handleSearch() {
         String keyword = searchField.getText().trim();
-    
+
         if (keyword.isEmpty()) {
-            JOptionPane.showMessageDialog(this, "Please enter a name, email, or course to search.");
+            JOptionPane.showMessageDialog(this, "Please enter name, IC number, email, phone, DOB, or course to search.");
             return;
         }
-    
+
         Student[] results = service.searchStudents(keyword);
-    
+
         if (results.length == 0) {
             JOptionPane.showMessageDialog(this, "No matching student found.");
             return;
         }
-    
+
         refreshTable(results);
     }
 
@@ -240,26 +328,26 @@ public class StudentEnrolmentApp extends JFrame {
 
     private void handleGenerateReport() {
         String report = service.generateReport();
-    
+
         JOptionPane.showMessageDialog(this, report, "Report", JOptionPane.INFORMATION_MESSAGE);
-    
+
         int choice = JOptionPane.showConfirmDialog(
                 this,
                 "Do you want to save this report as a text file?",
                 "Save Report",
                 JOptionPane.YES_NO_OPTION
         );
-    
+
         if (choice == JOptionPane.YES_OPTION) {
             JFileChooser fileChooser = new JFileChooser();
             fileChooser.setDialogTitle("Save Report");
             fileChooser.setSelectedFile(new java.io.File("enrolment_report.txt"));
-    
+
             int userSelection = fileChooser.showSaveDialog(this);
-    
+
             if (userSelection == JFileChooser.APPROVE_OPTION) {
                 java.io.File fileToSave = fileChooser.getSelectedFile();
-    
+
                 try (java.io.FileWriter writer = new java.io.FileWriter(fileToSave)) {
                     writer.write(report);
                     JOptionPane.showMessageDialog(this, "Report saved successfully!");
@@ -280,13 +368,19 @@ public class StudentEnrolmentApp extends JFrame {
 
         String id = tableModel.getValueAt(selectedRow, 0).toString();
         String name = tableModel.getValueAt(selectedRow, 1).toString();
-        String email = tableModel.getValueAt(selectedRow, 2).toString();
-        String course = tableModel.getValueAt(selectedRow, 3).toString();
+        String icNumber = tableModel.getValueAt(selectedRow, 2).toString();
+        String email = tableModel.getValueAt(selectedRow, 3).toString();
+        String phoneNumber = tableModel.getValueAt(selectedRow, 4).toString();
+        String dateOfBirth = tableModel.getValueAt(selectedRow, 5).toString();
+        String course = tableModel.getValueAt(selectedRow, 6).toString();
 
         detailsContentLabel.setText("<html>"
                 + "<b>ID:</b> " + id + "<br><br>"
                 + "<b>Name:</b> " + name + "<br><br>"
+                + "<b>IC Number:</b> " + icNumber + "<br><br>"
                 + "<b>Email:</b> " + email + "<br><br>"
+                + "<b>Phone:</b> " + phoneNumber + "<br><br>"
+                + "<b>DOB:</b> " + dateOfBirth + "<br><br>"
                 + "<b>Course:</b> " + course
                 + "</html>");
 
@@ -302,18 +396,23 @@ public class StudentEnrolmentApp extends JFrame {
         }
 
         String name = tableModel.getValueAt(selectedRow, 1).toString();
-        
-        int confirm = JOptionPane.showConfirmDialog(this, "Are you sure you want to delete student: " + name + "?", "Confirm Deletion", JOptionPane.YES_NO_OPTION);
+        String email = tableModel.getValueAt(selectedRow, 3).toString();
+
+        int confirm = JOptionPane.showConfirmDialog(this,
+                "Are you sure you want to delete student: " + name + "?",
+                "Confirm Deletion",
+                JOptionPane.YES_NO_OPTION);
+
         if (confirm != JOptionPane.YES_OPTION) {
-            return; 
+            return;
         }
 
-        boolean isDeleted = service.deleteStudent(name);
+        boolean isDeleted = service.deleteStudent(email);
 
         if (isDeleted) {
             JOptionPane.showMessageDialog(this, "Student deleted successfully!", "Success", JOptionPane.INFORMATION_MESSAGE);
             refreshTable(service.getAllStudents());
-            detailsPanel.setVisible(false); 
+            detailsPanel.setVisible(false);
         } else {
             JOptionPane.showMessageDialog(this, "Failed to delete student. Record might not exist.", "Error", JOptionPane.ERROR_MESSAGE);
         }
@@ -326,7 +425,10 @@ public class StudentEnrolmentApp extends JFrame {
             tableModel.addRow(new Object[]{
                     student.getId(),
                     student.getName(),
+                    student.getIcNumber(),
                     student.getEmail(),
+                    student.getPhoneNumber(),
+                    student.getDateOfBirth(),
                     student.getCourse()
             });
         }
@@ -334,7 +436,10 @@ public class StudentEnrolmentApp extends JFrame {
 
     private void clearInputFields() {
         nameField.setText("");
+        icNumberField.setText("");
         emailField.setText("");
+        phoneNumberField.setText("");
+        dateOfBirthField.setText("");
         courseComboBox.setSelectedIndex(0);
     }
 
